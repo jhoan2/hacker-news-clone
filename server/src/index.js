@@ -1,27 +1,30 @@
-const { ApolloServer } = require("apollo-server");
-const fs = require("fs");
-const path = require("path");
+const { ApolloServer, PubSub } = require("apollo-server");
 const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
-const { getUserId } = require("./utils");
 const Query = require("./resolvers/Query");
 const Mutation = require("./resolvers/Mutation");
+const Subscription = require("./resolvers/Subscription");
 const User = require("./resolvers/User");
 const Link = require("./resolvers/Link");
-const { PubSub } = require("apollo-server");
-const pubsub = new PubSub();
-const Subscription = require("./resolvers/Subscription");
 const Vote = require("./resolvers/Vote");
+const fs = require("fs");
+const path = require("path");
+const { getUserId } = require("./utils");
+
+const pubsub = new PubSub();
+
+const prisma = new PrismaClient({
+  errorFormat: "minimal",
+});
 
 const resolvers = {
   Query,
   Mutation,
+  Subscription,
   User,
   Link,
-  Subscription,
   Vote,
 };
-// 3
+
 const server = new ApolloServer({
   typeDefs: fs.readFileSync(path.join(__dirname, "schema.graphql"), "utf8"),
   resolvers,
@@ -32,6 +35,20 @@ const server = new ApolloServer({
       pubsub,
       userId: req && req.headers.authorization ? getUserId(req) : null,
     };
+  },
+  subscriptions: {
+    onConnect: (connectionParams) => {
+      if (connectionParams.authToken) {
+        return {
+          prisma,
+          userId: getUserId(null, connectionParams.authToken),
+        };
+      } else {
+        return {
+          prisma,
+        };
+      }
+    },
   },
 });
 
