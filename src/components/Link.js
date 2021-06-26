@@ -1,5 +1,26 @@
 import { AUTH_TOKEN, LINKS_PER_PAGE } from "../constants";
 import { timeDifferenceForDate } from "../utils";
+import { useMutation, gql } from "@apollo/client";
+
+const VOTE_MUTATION = gql`
+  mutation VoteMutation($linkId: ID!) {
+    vote(linkId: $linkId) {
+      id
+      link {
+        id
+        votes {
+          id
+          user {
+            id
+          }
+        }
+      }
+      user {
+        id
+      }
+    }
+  }
+`;
 
 const Link = (props) => {
   const { link } = props;
@@ -8,6 +29,11 @@ const Link = (props) => {
   const take = LINKS_PER_PAGE;
   const skip = 0;
   const orderBy = { createdAt: "desc" };
+  const [vote] = useMutation(VOTE_MUTATION, {
+    variables: {
+      linkId: link.id,
+    },
+  });
 
   return (
     <div className="flex mt2 items-start">
@@ -38,3 +64,4 @@ const Link = (props) => {
     </div>
   );
 };
+export default Link;
