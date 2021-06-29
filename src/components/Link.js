@@ -36,6 +36,11 @@ const Link = (props) => {
     update(cache, { data: { vote } }) {
       const { feed } = cache.readQuery({
         query: FEED_QUERY,
+        variables: {
+          take,
+          skip,
+          orderBy,
+        },
       });
 
       const updatedLinks = feed.links.map((feedLink) => {
@@ -55,10 +60,14 @@ const Link = (props) => {
             links: updatedLinks,
           },
         },
+        variables: {
+          take,
+          skip,
+          orderBy,
+        },
       });
     },
   });
-
   return (
     <div className="flex mt2 items-start">
       <div className="flex items-center">
